@@ -3,82 +3,41 @@ package producer
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
 	"producer-service/internal/config"
 	"producer-service/internal/kafka/messaging"
 )
 
-func ExternalSend(config config.KafkaConfig) {
-
-	producer := messaging.NewKafkaProducer([]string{config.KafkaURL})
-	defer producer.Close()
-	value, err := json.Marshal(JsonData)
-	if err != nil {
-		log.Printf("kafka.ExternalSend: %v", err)
-		return
-	}
-
-	msg := messaging.Message{
-		Key:   []byte(fmt.Sprintf("key")),
-		Value: value,
-	}
-	if err = producer.ProduceMessage(context.Background(), config.Topic, msg); err != nil {
-		log.Printf("kafka.ExternalSend: %v", err)
-		return
-	}
+func createValidJSON() ([]byte, error) {
+	order := createRandomOrder()
+	return json.Marshal(order)
 }
 
-const (
-	JsonData = `
-	{
-		"order_uid": "b563feb7b2b84b6test",
-		"track_number": "WBILMTESTTRACK",
-		"entry": "WBIL",
-		"delivery": {
-			"name": "Test Testov",
-			"phone": "+9720000000",
-			"zip": "2639809",
-			"city": "Kiryat Mozkin",
-			"address": "Ploshad Mira 15",
-			"region": "Kraiot",
-			"email": "test@gmail.com"
-		},
-		"payment": {
-			"transaction": "b563feb7b2b84b6test",
-			"request_id": "",
-			"currency": "USD",
-			"provider": "wbpay",
-			"amount": 1817,
-			"payment_dt": 1637907727,
-			"bank": "alpha",
-			"delivery_cost": 1500,
-			"goods_total": 317,
-			"custom_fee": 0
-		},
-		"items": [
-			{
-			"chrt_id": 9934930,
-			"track_number": "WBILMTESTTRACK",
-			"price": 453,
-			"rid": "ab4219087a764ae0btest",
-			"name": "Mascaras",
-			"sale": 30,
-			"size": "0",
-			"total_price": 317,
-			"nm_id": 2389212,
-			"brand": "Vivienne Sabo",
-			"status": 202
-			}
-		],
-		"locale": "en",
-		"internal_signature": "",
-		"customer_id": "test",
-		"delivery_service": "meest",
-		"shardkey": "9",
-		"sm_id": 99,
-		"date_created": "2021-11-26T06:22:19Z",
-		"oof_shard": "1"
+func ExternalSend(config config.KafkaConfig) {
+	producer := messaging.NewKafkaProducer([]string{config.KafkaURL})
+	defer producer.Close()
+	for range 10 {
+		jsonBytes, err := createValidJSON()
+		if err != nil {
+			config.Logger.Errorf("producer.ExternalSend: Failed to create JSON: %v", err)
+			return
+		}
+
+		var test map[string]interface{}
+		if err := json.Unmarshal(jsonBytes, &test); err != nil {
+			config.Logger.Errorf("producer.ExternalSend: Generated JSON is invalid: %v", err)
+			return
+		}
+
+		msg := messaging.Message{
+			Key:   []byte("test-key"),
+			Value: jsonBytes,
+		}
+
+		if err := producer.ProduceMessage(context.Background(), config.Topic, msg); err != nil {
+			config.Logger.Errorf("producer.ExternalSend:  %v", err)
+			return
+		}
+
+		config.Logger.Infof("producer.ExternalSend: Successfully sent message to topic %s", config.Topic)
 	}
-  `
-)
+}
