@@ -4,6 +4,7 @@ services:
     ports: # Порты на котором мы можем обращаться к сервису (Список [el1, el2])
       - "9092:9092" #  <порт контейнера(нельзя менять произвольно, определяется образом kafka)>:<Порт хоста(можно менять как угодно, для доступа с вашего компьютера)>
       - "9090:9090" # Случайный порт хоста (docker сам выберет свободный порт хоста)
+      - "9091:9091"
     environment: # Переменные окружения (k=v)
       - KAFKA_CFG_NODE_ID=1 # Уникальный ID ноды в кластере (для каждой свой ID)
       - KAFKA_KRAFT_CLUSTER_ID=DWfwefwefew # Уникальный ID кластера (Может быть любой строкой)
@@ -26,7 +27,7 @@ services:
     volumes:
       - kafka_data:/bitnami/kafka
     healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka:9092 --list"]
   main-service:
     build:
       context: ./main-service
@@ -39,13 +40,21 @@ services:
       DB_PASSWORD: password
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
       postgres:
         condition: service_healthy
     ports:
       - 8080:8080
     volumes:
-      - ./configs:/main-service/configs
+      - ./configs:/app/configs
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.25'
   producer-service:
     build:
       context: ./producer-service
@@ -58,11 +67,19 @@ services:
       DB_PASSWORD: password
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
       postgres:
         condition: service_healthy
     volumes:
-      - ./configs:/producer-service/configs
+      - ./configs:/app/configs
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.3'
+        reservations:
+          memory: 32M
+          cpus: '0.15'
   postgres:
     image: postgres:15
     environment:
@@ -74,7 +91,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d Orders"]
       interval: 10s
       timeout: 5s
       retries: 5
