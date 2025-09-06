@@ -3,83 +3,69 @@ package subs
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
+	"net/http"
 	"orders/internal/models"
+	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Handler struct {
-	service Service
+	service *Service
+	logger  *logrus.Logger
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: *service}
-}
-func (h *Handler) Create(jsonOrder *models.OrderJson) {
-	if err := json.Unmarshal([]byte(jsonData), &jsonOrder); err != nil {
-		log.Printf("Help: %v", err)
-		return
+func NewHandler(service *Service, logger *logrus.Logger) *Handler {
+	return &Handler{
+		service: service,
+		logger:  logger,
 	}
-	h.service.Create(context.Background(), jsonOrder)
 }
-func (h *Handler) Help() {
-	jsonOrder := models.OrderJson{}
-	if err := json.Unmarshal([]byte(jsonData), &jsonOrder); err != nil {
-		log.Printf("Help: %v", err)
-		return
-	}
-	h.service.Create(context.Background(), &jsonOrder)
+func (h *Handler) Create(ctx context.Context, jsonOrder *models.OrderJson) error {
+	return h.service.Create(ctx, jsonOrder)
+
 }
 
-const (
-	jsonData = `
-	{
-		"order_uid": "b563feb7b2b84b6test",
-		"track_number": "WBILMTESTTRACK",
-		"entry": "WBIL",
-		"delivery": {
-			"name": "Test Testov",
-			"phone": "+9720000000",
-			"zip": "2639809",
-			"city": "Kiryat Mozkin",
-			"address": "Ploshad Mira 15",
-			"region": "Kraiot",
-			"email": "test@gmail.com"
-		},
-		"payment": {
-			"transaction": "b563feb7b2b84b6test",
-			"request_id": "",
-			"currency": "USD",
-			"provider": "wbpay",
-			"amount": 1817,
-			"payment_dt": 1637907727,
-			"bank": "alpha",
-			"delivery_cost": 1500,
-			"goods_total": 317,
-			"custom_fee": 0
-		},
-		"items": [
-			{
-			"chrt_id": 9934930,
-			"track_number": "WBILMTESTTRACK",
-			"price": 453,
-			"rid": "ab4219087a764ae0btest",
-			"name": "Mascaras",
-			"sale": 30,
-			"size": "0",
-			"total_price": 317,
-			"nm_id": 2389212,
-			"brand": "Vivienne Sabo",
-			"status": 202
-			}
-		],
-		"locale": "en",
-		"internal_signature": "",
-		"customer_id": "test",
-		"delivery_service": "meest",
-		"shardkey": "9",
-		"sm_id": 99,
-		"date_created": "2021-11-26T06:22:19Z",
-		"oof_shard": "1"
+func (h *Handler) GetOrderFromHttp(w http.ResponseWriter, r *http.Request) {
+
+	if strings.ToLower(r.Method) != "get" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-  `
-)
+	orderUID := getParamFromPath(r.URL.Path)
+	if orderUID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	order, err := h.service.GetOrder(context.Background(), orderUID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		h.logger.Errorf("Handler.GetOrderFromHttp: %v", err)
+		return
+	}
+	data, err := json.Marshal(order)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		h.logger.Errorf("Handler.GetOrderFromHttp: %v", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	fmt.Println(order)
+}
+
+func (h *Handler) GetOrder(orderUID string) {
+	order, err := h.service.GetOrder(context.Background(), orderUID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(order)
+}
+
+func getParamFromPath(path string) string {
+	param := path[strings.LastIndex(path, "/")+1:]
+	return param
+}
