@@ -2,6 +2,8 @@ package messaging
 
 import (
 	"context"
+
+	"github.com/segmentio/kafka-go"
 )
 
 // Message — сообщение
@@ -18,6 +20,8 @@ type Producer interface {
 type Handler func(ctx context.Context, msg Message) error
 
 type Consumer interface {
-	ConsumeMessage(ctx context.Context, handler Handler) error
+	Run(ctx context.Context)
+	ConsumeMessage(ctx context.Context) error
+	Commit(ctx context.Context, msg kafka.Message) error
 	Close() error
 }
