@@ -2,10 +2,10 @@ package config
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 )
 
 type PostgresConfig struct {
@@ -14,25 +14,22 @@ type PostgresConfig struct {
 	Name     string
 	User     string
 	Password string
+	Logger   *logrus.Logger
 }
 
-func LoadPostgresConfig() (*PostgresConfig, error) {
-	envPath := filepath.Join("..", "configs", ".env")
+func LoadPostgresConfig(logger *logrus.Logger) (*PostgresConfig, error) {
+	envPath := filepath.Join("configs", ".env")
 	if err := godotenv.Load(envPath); err != nil {
+		logger.Errorf("config.LoadPostgresConfig: %v", err)
 		return nil, fmt.Errorf("config.LoadPostgresConfig: %w", err)
 	}
 	config := &PostgresConfig{
-		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnv("DB_PORT", "5432"),
-		Name:     getEnv("DB_NAME", "Orders"),
-		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", "password"),
+		Host:     GetEnv("DB_HOST", "localhost"),
+		Port:     GetEnv("DB_PORT", "5432"),
+		Name:     GetEnv("DB_NAME", "Orders"),
+		User:     GetEnv("DB_USER", "postgres"),
+		Password: GetEnv("DB_PASSWORD", "password"),
+		Logger:   logger,
 	}
 	return config, nil
-}
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
 }
