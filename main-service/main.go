@@ -47,7 +47,7 @@ func main() {
 	defer stop()
 
 	// CHECKING GET ORDER //DELETE AFTER TESTS
-	go CheckGetOrder(ctx, 5, app)
+	// go CheckGetOrder(ctx, 5, app)
 
 	// SERVER
 	go app.server.Run()
