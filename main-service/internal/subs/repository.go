@@ -8,7 +8,13 @@ import (
 	"sync"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	errExist    = errors.New("record already exist")
+	errNotFound = errors.New("record not found")
 )
 
 type Repository struct {
@@ -46,26 +52,30 @@ func (r *Repository) Create(ctx context.Context, orderJson *models.OrderJson) er
 	}
 
 	if err = insertOrder(ctx, tx, order); err != nil {
+		if isDuplicateKeyError(err) {
+			r.logger.Warnf("Repository.Create: order already exists: %v", err)
+			return fmt.Errorf("%w: order with UID %s already exists", errExist, orderJson.OrderUID)
+		}
 		r.logger.Warnf("Repository.Create: %v", err)
-		return err
+		return fmt.Errorf("failed to insert order: %w", err)
 	}
 
 	delivery := orderJson.Delivery
 	delivery.OrderUID = orderJson.OrderUID
 	if err = insertDelivery(ctx, tx, delivery); err != nil {
 		r.logger.Warnf("Repository.Create: %v", err)
-		return err
+		return fmt.Errorf("failed to insert delivery: %w", err)
 	}
 	payment := orderJson.Payment
 	if err = insertPayment(ctx, tx, payment); err != nil {
 		r.logger.Warnf("Repository.Create: %v", err)
-		return err
+		return fmt.Errorf("failed to insert payment: %w", err)
 	}
 	items := orderJson.Items
 	for _, item := range items {
 		if err = insertItems(ctx, tx, item); err != nil {
 			r.logger.Warnf("Repository.Create: %v", err)
-			return err
+			return fmt.Errorf("failed to insert item: %w", err)
 		}
 	}
 	r.logger.Info("Repository.Create: Transaction commit")
@@ -157,10 +167,10 @@ func (r *Repository) GetOrder(ctx context.Context, orderUID string) (*models.Ord
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			r.logger.Warnf("Repository.GetOrder: %v", err)
-			return nil, fmt.Errorf("order not found: %w", err)
+			r.logger.Warnf("Repository.GetOrder: order %s not found", orderUID)
+			return nil, fmt.Errorf("%w: order %s", errNotFound, orderUID)
 		}
-		r.logger.Warnf("Repository.GetOrder: %v", err)
+		r.logger.Warnf("Repository.GetOrder: failed to get order: %v", err)
 		return nil, fmt.Errorf("failed to get order: %w", err)
 	}
 	var delivery models.Delivery
@@ -252,4 +262,12 @@ func (r *Repository) GetOrder(ctx context.Context, orderUID string) (*models.Ord
 	order.Items = items
 
 	return &order, err
+}
+
+func isDuplicateKeyError(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505" // unique_violation
+	}
+	return false
 }

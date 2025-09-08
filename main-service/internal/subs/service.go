@@ -9,6 +9,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	timeTTL              = 2 * time.Minute
+	timeTickerCleanCache = 1 * time.Minute
+)
+
 type Service struct {
 	repo     Repository
 	cache    map[string]cacheEntry
@@ -26,7 +31,7 @@ func NewService(repo *Repository, logger *logrus.Logger) *Service {
 	service := &Service{
 		repo:     *repo,
 		cache:    make(map[string]cacheEntry),
-		cacheTTL: 2 * time.Minute,
+		cacheTTL: timeTTL,
 		logger:   logger,
 	}
 
@@ -84,7 +89,7 @@ func (s *Service) WarmUpCache(ctx context.Context) error {
 }
 
 func (s *Service) startCacheCleaner() {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(timeTickerCleanCache)
 	defer ticker.Stop()
 
 	for range ticker.C {
