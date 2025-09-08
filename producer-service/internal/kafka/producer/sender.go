@@ -7,6 +7,10 @@ import (
 	"producer-service/internal/kafka/messaging"
 )
 
+const (
+	countMsg = 10
+)
+
 func createValidJSON() ([]byte, error) {
 	order := createRandomOrder()
 	return json.Marshal(order)
@@ -15,7 +19,7 @@ func createValidJSON() ([]byte, error) {
 func ExternalSend(config config.KafkaConfig) {
 	producer := messaging.NewKafkaProducer([]string{config.KafkaURL})
 	defer producer.Close()
-	for range 10 {
+	for range countMsg {
 		jsonBytes, err := createValidJSON()
 		if err != nil {
 			config.Logger.Errorf("producer.ExternalSend: Failed to create JSON: %v", err)
