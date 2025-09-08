@@ -32,5 +32,5 @@ func (s *Server) Run() {
 		s.logger.Errorf("Server.Run: error with listen server %v", err)
 	}
 
-	s.logger.Infof("Server.Run: Server UP: http://localhost:8081/order")
+	s.logger.Infof("Server.Run: Server UP: http://localhost:%s/order", port)
 }
