@@ -55,7 +55,6 @@ services:
         reservations:
           memory: 64M
           cpus: '0.25'
-    startup_delay: "10s"
   
   frontend:
     image: halverneus/static-file-server:latest
@@ -68,6 +67,8 @@ services:
     build:
       context: ./producer-service
       dockerfile: Dockerfile
+    profiles: ["manual"]
+    restart: "no"
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
