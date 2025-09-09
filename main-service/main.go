@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/sirupsen/logrus"
@@ -46,9 +45,6 @@ func main() {
 		syscall.SIGTERM)
 	defer stop()
 
-	// CHECKING GET ORDER //DELETE AFTER TESTS
-	// go CheckGetOrder(ctx, 5, app)
-
 	// SERVER
 	go app.server.Run()
 
@@ -61,27 +57,13 @@ func main() {
 	app.logger.Info("[GLOBAL]: Service stopped..")
 }
 
-func CheckGetOrder(ctx context.Context, interval time.Duration, app *Application) {
-	app.logger.Infof("main: [GET_ORDER]: Run ticker")
-	ticker := time.NewTicker(interval * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			app.subsHandler.GetOrder("b563feb7b2b84b6test")
-		}
-	}
-}
-
 func setupApplication() (*Application, error) {
 	logger := setupLogger()
 
 	postgresCfg, err := config.LoadPostgresConfig(logger) // "postgres://postgres:password@postgres:5432/Orders"
 	if err != nil {
 		logger.Errorf("main.setupApplication: [POSTGRES]: Error with load config: %v", err)
-		return nil, fmt.Errorf("main.setupApplication: %v", err)
+		// return nil, fmt.Errorf("main.setupApplication: %v", err)
 	}
 	URL := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", postgresCfg.User, postgresCfg.Password, postgresCfg.Host, postgresCfg.Port, postgresCfg.Name)
 	logger.Infof("main.setupApplication: [POSTGRES] Config was Load: %+v\n URL: %s", postgresCfg, URL)
@@ -97,7 +79,7 @@ func setupApplication() (*Application, error) {
 	kafkaCfg, err := config.LoadKafkaConfig(logger)
 	if err != nil {
 		logger.Errorf("main.setupApplication:: [KAFKA]: Error with load config: %v", err)
-		return nil, fmt.Errorf("main.setupApplication: %v", err)
+		// return nil, fmt.Errorf("main.setupApplication: %v", err)
 	}
 	logger.Infof("main.setupApplication:: [KAFKA]: Config was Load: %+v", kafkaCfg)
 	kafkaConsumer := messaging.NewKafkaConsumer([]string{kafkaCfg.KafkaURL}, kafkaCfg.Topic, kafkaCfg.GroupConsumer, logger, subsHandler)
