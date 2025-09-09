@@ -7,57 +7,57 @@ Demo service with Kafka, PostgreSQL, and cache. This project implements a micros
 ```
 .
 ├── configs/
-│   └── .env                    # Environment configuration file
+│   └── .env                      # Environment configuration file
 ├── front/
-│   ├── Dockerfile             # Docker configuration for frontend service
-│   ├── index.html            # Main HTML page
-│   ├── script.js             # Client-side JavaScript for order lookup
-│   └── style.css             # CSS styling
-├── main-service/              # Main service for consuming Kafka messages and serving HTTP requests
-│   ├── Dockerfile             # Docker configuration for main service
-│   ├── go.mod                 # Go module definition
-│   ├── go.sum                 # Go dependencies checksum
-│   ├── main.go               # Main application entry point
+│   ├── Dockerfile                # Docker configuration for frontend service
+│   ├── index.html                # Main HTML page
+│   ├── script.js                 # Client-side JavaScript for order lookup
+│   └── style.css                 # CSS styling
+├── main-service/                 # Main service for consuming Kafka messages and serving HTTP requests
+│   ├── Dockerfile                # Docker configuration for main service
+│   ├── go.mod                    # Go module definition
+│   ├── go.sum                    # Go dependencies checksum
+│   ├── main.go                   # Main application entry point
 │   ├── internal/
-│   │   ├── config/           # Configuration loading utilities
-│   │   │   ├── kafka.go     # Kafka configuration
-│   │   │   ├── postgres.go # PostgreSQL configuration
-│   │   │   └── utils.go     # Environment utilities
-│   │   ├── database/        # Database handling
-│   │   │   ├── queries.go   # Database queries
-│   │   │   └── tables.go    # Database table creation
-│   │   ├── models/          # Data models
-│   │   │   └── models.go    # Order, Delivery, Payment, and Item structs
-│   │   ├── subs/            # Order processing logic
-│   │   │   ├── handlers.go  # HTTP handlers
-│   │   │   ├── queries.go   # Database queries for orders
-│   │   │   ├── repository.go # Data access layer
-│   │   │   └── service.go   # Business logic with caching
+│   │   ├── config/               # Configuration loading utilities
+│   │   │   ├── kafka.go          # Kafka configuration
+│   │   │   ├── postgres.go       # PostgreSQL configuration
+│   │   │   └── utils.go          # Environment utilities
+│   │   ├── database/             # Database handling
+│   │   │   ├── queries.go        # Database queries
+│   │   │   └── tables.go         # Database table creation
+│   │   ├── models/               # Data models
+│   │   │   └── models.go         # Order, Delivery, Payment, and Item structs
+│   │   ├── subs/                 # Order processing logic
+│   │   │   ├── handlers.go       # HTTP handlers
+│   │   │   ├── queries.go        # Database queries for orders
+│   │   │   ├── repository.go     # Data access layer
+│   │   │   └── service.go        # Business logic with caching
 │   │   ├── kafka/
-│   │   │   └── messaging/   # Kafka consumer implementation
-│   │   │       ├── consumer.go # Kafka message consumer
-│   │   │       └── types.go    # Kafka message types
+│   │   │   └── messaging/        # Kafka consumer implementation
+│   │   │       ├── consumer.go   # Kafka message consumer
+│   │   │       └── types.go      # Kafka message types
 │   │   └── router/
-│   │       └── router.go    # HTTP router setup
-└── producer-service/         # Service for producing Kafka messages
-    ├── Dockerfile           # Docker configuration for producer service
-    ├── go.mod              # Go module definition
-    ├── go.sum             # Go dependencies checksum
-    ├── main.go           # Main application entry point
+│   │       └── router.go         # HTTP router setup
+└── producer-service/             # Service for producing Kafka messages
+    ├── Dockerfile                # Docker configuration for producer service
+    ├── go.mod                    # Go module definition
+    ├── go.sum                    # Go dependencies checksum
+    ├── main.go                   # Main application entry point
     └── internal/
-        ├── config/       # Configuration loading utilities
-        │   ├── kafka.go # Kafka configuration
-        │   ├── postgres.go # PostgreSQL configuration (possibly unused in producer)
-        │   └── utils.go    # Environment utilities
+        ├── config/               # Configuration loading utilities
+        │   ├── kafka.go          # Kafka configuration
+        │   ├── postgres.go       # PostgreSQL configuration (possibly unused in producer)
+        │   └── utils.go          # Environment utilities
         ├── kafka/
-        │   └── messaging/  # Kafka producer implementation
-        │       ├── producer.go # Kafka message producer
-        │       └── types.go    # Kafka message types
-        ├── kafka/producer/  # Order message producer
-        │   ├── sender.go    # Message sending logic
-        │   └── test.go      # Test data generation
+        │   └── messaging/        # Kafka producer implementation
+        │       ├── producer.go   # Kafka message producer
+        │       └── types.go      # Kafka message types
+        ├── kafka/producer/       # Order message producer
+        │   ├── sender.go         # Message sending logic
+        │   └── test.go           # Test data generation
         └── models/
-            └── models.go    # Data models for order messages
+            └── models.go         # Data models for order messages
 ```
 
 ## Overview
