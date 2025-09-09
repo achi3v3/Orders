@@ -12,7 +12,7 @@ type KafkaConfig struct {
 	KafkaURL      string
 	Topic         string
 	GroupConsumer string
-	logger        *logrus.Logger
+	Logger        *logrus.Logger
 }
 
 func LoadKafkaConfig(logger *logrus.Logger) (*KafkaConfig, error) {
