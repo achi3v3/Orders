@@ -31,7 +31,6 @@ func NewRepository(client *pgx.Conn, logger *logrus.Logger) *Repository {
 
 func (r *Repository) Create(ctx context.Context, orderJson *models.OrderJson) error {
 	tx, err := r.client.Begin(ctx)
-	r.logger.Info("Repository.Create: Transaction BEGIN")
 	if err != nil {
 		return err
 	}
@@ -50,6 +49,7 @@ func (r *Repository) Create(ctx context.Context, orderJson *models.OrderJson) er
 		DateCreated:       orderJson.DateCreated,
 		OofShard:          orderJson.OofShard,
 	}
+	r.logger.Infof("Repository.Create: Transaction BEGIN for %s", order.OrderUID)
 
 	if err = insertOrder(ctx, tx, order); err != nil {
 		if isDuplicateKeyError(err) {
@@ -78,7 +78,7 @@ func (r *Repository) Create(ctx context.Context, orderJson *models.OrderJson) er
 			return fmt.Errorf("failed to insert item: %w", err)
 		}
 	}
-	r.logger.Info("Repository.Create: Transaction commit")
+	r.logger.Info("Repository.Create: Transaction COMMIT")
 	return tx.Commit(ctx)
 }
 
@@ -267,7 +267,7 @@ func (r *Repository) GetOrder(ctx context.Context, orderUID string) (*models.Ord
 func isDuplicateKeyError(err error) bool {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505" // unique_violation
+		return pgErr.Code == "23505"
 	}
 	return false
 }

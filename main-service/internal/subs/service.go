@@ -55,7 +55,7 @@ func (s *Service) GetOrder(ctx context.Context, orderUID string) (*models.OrderJ
 	}
 
 	order, err := s.repo.GetOrder(ctx, orderUID)
-	s.logger.Info("Service.GetOrder: Get Order From DB")
+	s.logger.Info("Service.GetOrder: Get order From db")
 	if err != nil {
 		s.logger.Errorf("Service.GetOrder: %v", err)
 		return nil, err
@@ -64,7 +64,7 @@ func (s *Service) GetOrder(ctx context.Context, orderUID string) (*models.OrderJ
 		return nil, nil
 	}
 	s.setToCache(orderUID, order)
-	s.logger.Info("Service.GetOrder: Get Order From DB and cached")
+	s.logger.Info("Service.GetOrder: Get order From db and cached")
 	return order, nil
 }
 
@@ -105,7 +105,7 @@ func (s *Service) cleanExpiredCache() {
 	for order_uid, entry := range s.cache {
 		if now.After(entry.expiresAt) {
 			delete(s.cache, order_uid)
-			s.logger.Infof("Cache expired: %s", order_uid)
+			s.logger.Infof("Cache EXPIRED: %s", order_uid)
 		}
 	}
 }

@@ -85,14 +85,12 @@ func (h *Handler) GetOrder(orderUID string) {
 	fmt.Println(order)
 }
 func (h *Handler) handleGetOrderError(w http.ResponseWriter, err error, orderUID string) {
-	// Проверяем, является ли ошибка "not found"
 	if errors.Is(err, errNotFound) || strings.Contains(err.Error(), "not found") {
 		h.logger.Warnf("Handler.GetOrderFromHttp: order %s not found: %v", orderUID, err)
 		http.Error(w, fmt.Sprintf("Order %s not found", orderUID), http.StatusNotFound)
 		return
 	}
 
-	// Все остальные ошибки считаем внутренними
 	h.logger.Errorf("Handler.GetOrderFromHttp: failed to get order %s: %v", orderUID, err)
 	http.Error(w, "Internal server error", http.StatusInternalServerError)
 }
@@ -104,7 +102,7 @@ func getParamFromPath(path string) string {
 
 // func getParamFromPath(path string) string {
 // 	parts := strings.Split(strings.Trim(path, "/"), "/")
-// 	if len(parts) >= 2 && parts[0] == "orders" {
+// 	if len(parts) >= 2 && parts[0] == "order" {
 // 		return parts[1]
 // 	}
 // 	return ""
