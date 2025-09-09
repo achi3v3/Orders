@@ -37,8 +37,8 @@ func NewKafkaConsumer(brokers []string, topic string, groupID string, logger *lo
 }
 
 func (c *KafkaConsumer) Run(ctx context.Context) {
-	c.logger.Info("KafkaConsumer: Starting consumer...")
-	c.logger.Infof("KafkaConsumer: Brokers: %v, Topic: %s, GroupID: %s",
+	c.logger.Info("KafkaConsumer.Run: Starting consumer...")
+	c.logger.Infof("KafkaConsumer.Run: Brokers: %v, Topic: %s, GroupID: %s",
 		c.reader.Config().Brokers,
 		c.reader.Config().Topic,
 		c.reader.Config().GroupID)
@@ -46,7 +46,7 @@ func (c *KafkaConsumer) Run(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
-			c.logger.Info("KafkaConsume.Run: Consumer stop (ctx cancel)")
+			c.logger.Info("KafkaConsume.Run: Consumer stop (context canceled)")
 			return
 		default:
 			if err := c.ConsumeMessage(ctx); err != nil {
@@ -67,7 +67,7 @@ func (c *KafkaConsumer) ConsumeMessage(ctx context.Context) error {
 			return err
 		}
 		c.logger.Errorf("KafkaConsumer.ConsumeMessage: failed to fetch msg: %v", err)
-		return fmt.Errorf("KafkaConsumer.ConsumeMessage: fetch message: %w", err)
+		return fmt.Errorf("fetch message: %w", err)
 	}
 	log := c.logger.WithFields(logrus.Fields{
 		"topic":     kafkaMsg.Topic,
@@ -75,7 +75,7 @@ func (c *KafkaConsumer) ConsumeMessage(ctx context.Context) error {
 		"offset":    kafkaMsg.Offset,
 		"key":       kafkaMsg.Key,
 	})
-	log.Info("Received kafka message")
+	log.Info("KafkaConsumer.Run: Received kafka message")
 	var order *models.OrderJson
 	if err := json.Unmarshal(kafkaMsg.Value, &order); err != nil {
 		log.Errorf("KafkaConsumer.ConsumeMessage: Failed to unmarshal message: %v. Message %s", err, string(kafkaMsg.Value))
@@ -89,18 +89,18 @@ func (c *KafkaConsumer) ConsumeMessage(ctx context.Context) error {
 	}
 
 	log = log.WithField("order_uid", order.OrderUID)
-	log.Info("Read Message")
+	log.Info("KafkaConsumer.Run: Read Message")
 	if err = c.handler.Create(ctx, order); err != nil {
 		log.Errorf("KafkaConsumer.ConsumeMessage: %v", err)
-		return fmt.Errorf("KafkaConsumer.ConsumeMessage: %w", err)
+		return fmt.Errorf("failed to create order %s. error: %w", order.OrderUID, err)
 
 	}
 	if err = c.Commit(ctx, kafkaMsg); err != nil {
 		log.Errorf("KafkaConsumer.ConsumeMessage: %v", err)
-		return fmt.Errorf("KafkaConsumer.ConsumeMessage: %w", err)
+		return fmt.Errorf("failed to commit message %s. error: %w", order.OrderUID, err)
 
 	}
-	log.Info("Commit Message")
+	log.Info("KafkaConsumer.Run: Commit Message")
 	return nil
 }
 
@@ -109,6 +109,6 @@ func (c *KafkaConsumer) Commit(ctx context.Context, msg kafka.Message) error {
 }
 
 func (c *KafkaConsumer) Close() error {
-	c.logger.Info("Closing Kafka consumer")
+	c.logger.Info("KafkaConsumer.Close: Closing Kafka consumer")
 	return c.reader.Close()
 }
