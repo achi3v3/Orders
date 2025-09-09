@@ -230,3 +230,5 @@ To run the project:
    ```
 
 The frontend service will be available at http://localhost:3000, and the main service API at http://localhost:8080.
+
+<img width="1659" height="929" alt="image" src="https://github.com/user-attachments/assets/b258bce7-22af-4bf5-974f-c993e361a2c9" />
